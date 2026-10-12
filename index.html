@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Web Page Viewer</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    html, body { margin: 0; height: 100%; font-family: Segoe UI, sans-serif; background: #fff; }
+    #frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    #setup { display: none; height: 100%; flex-direction: column; align-items: center;
+             justify-content: center; gap: 10px; padding: 16px; box-sizing: border-box; }
+    #setup input { width: min(520px, 90%); padding: 8px; font-size: 15px; }
+    #setup button, #gear { padding: 8px 16px; font-size: 14px; cursor: pointer; }
+    #hint { color: #666; font-size: 12px; max-width: 520px; text-align: center; }
+    #gear { position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity .2s;
+            background: #ffffffcc; border: 1px solid #aaa; border-radius: 4px; z-index: 5; }
+    body:hover #gear { opacity: .85; }
+    body.slideshow #gear { display: none !important; }
+  </style>
+</head>
+<body>
+  <button id="gear" title="Change web page">⚙</button>
+  <iframe id="frame" allow="fullscreen; autoplay; clipboard-write" referrerpolicy="no-referrer"></iframe>
+  <div id="setup">
+    <h3>Web Page Viewer</h3>
+    <input id="url" type="url" placeholder="https://example.com" />
+    <button id="save">Show page</button>
+    <div id="hint">Use an https address. Some sites (Google, Facebook, banks…) forbid being
+      embedded and will appear blank. Your own pages, Power BI/Grafana embeds, YouTube
+      <code>/embed/</code> links, Wikipedia, etc. work.</div>
+  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    const settings = () => Office.context.document.settings;
+
+    function normalize(u) {
+      u = u.trim();
+      if (!u) return "";
+      if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+      return u;
+    }
+    function show(url) {
+      if (url) {
+        $("frame").style.display = "block";
+        $("setup").style.display = "none";
+        $("gear").style.display = "block";
+        if ($("frame").src !== url) $("frame").src = url;
+      } else {
+        $("frame").style.display = "none";
+        $("gear").style.display = "none";
+        $("setup").style.display = "flex";
+        $("url").value = settings().get("url") || "";
+      }
+    }
+    Office.onReady(() => {
+      show(settings().get("url"));
+      $("save").onclick = () => {
+        const url = normalize($("url").value);
+        if (!url) return;
+        settings().set("url", url);
+        settings().saveAsync(() => show(url));
+      };
+      $("url").onkeydown = e => { if (e.key === "Enter") $("save").click(); };
+      $("gear").onclick = () => show(null);
+
+      // "read" = slide show, "edit" = normal editing view.
+      const applyView = v => document.body.classList.toggle("slideshow", v === "read");
+      try {
+        Office.context.document.getActiveViewAsync(r => {
+          if (r.status === Office.AsyncResultStatus.Succeeded) applyView(r.value);
+        });
+        Office.context.document.addHandlerAsync(Office.EventType.ActiveViewChanged,
+          e => applyView(e.activeView));
+      } catch (err) { /* older hosts: gear stays hover-only */ }
+    });
+  </script>
+</body>
+</html>
