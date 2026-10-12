@@ -1,38 +1,25 @@
-# Web Page Viewer – PowerPoint add-in
+# Web Page Viewer for PowerPoint
 
-Shows a live web page inside a slide, interactive during the slide show.
+Show a live, clickable web page inside a slide. It keeps working during the slide show.
 
-## 1. Host the `site` folder (once, by the person sharing)
-Upload the contents of `site/` (index.html + assets/) to any **HTTPS** static host,
-e.g. GitHub Pages, Netlify (drag & drop), Azure Static Web Apps, or your company web server.
-No server code is needed.
+## Get it
+1. Download the add-in file: [manifest.xml](https://mousawm.github.io/webpage-viewer/manifest.xml)
+   (right-click → Save link as…).
+2. Install it by following **[INSTALL.md](INSTALL.md)**. It takes about two minutes.
 
-## 2. Point the manifest at it
-```
-.\set-host.ps1 https://yourname.github.io/webpage-viewer
-```
-(or edit `manifest.xml` and replace every `https://YOUR-HOST.example.com`).
-Open `<your address>/index.html` in a browser to check it loads (you'll see the URL prompt).
+## Use it
+1. In PowerPoint, go to **Insert → My Add-ins → Web Page Viewer**.
+2. Type an `https://` address and click **Show page**.
+3. Resize or move the box like any other object on the slide.
+4. Press **F5** to start the slide show. The page stays live and clickable.
 
-## 3. Install for people
+To change the address, hover over the box in edit view and click ⚙. The button is hidden during the slide show.
 
-**Microsoft 365 organisation (easiest, everyone gets it)**
-Admin center → Settings → Integrated apps → Upload custom apps → Office Add-in → upload `manifest.xml`.
+## Good to know
+- Only `https://` pages work. Some sites (Google, Microsoft sign-in, banks) don't allow embedding and appear blank.
+- The address is saved inside your .pptx, so don't put passwords or tokens in it.
+- Boxes showing the same site usually share one login, but some sites block this.
 
-**Single user, shared folder (Windows)**
-1. Put `manifest.xml` in a folder and share it (e.g. `C:\AddinCatalog`).
-2. PowerPoint → File → Options → Trust Center → Trust Center Settings → Trusted Add-in Catalogs
-   → add the folder path, tick "Show in Menu", OK, restart PowerPoint.
-3. Insert → My Add-ins → SHARED FOLDER → Web Page Viewer → Add.
-
-**PowerPoint on the web**
-Insert → Add-ins → My Add-ins → Manage My Add-ins → Upload My Add-in → choose `manifest.xml`.
-
-## Using it
-Insert → My Add-ins → Web Page Viewer, type an https URL, **Show page**.
-Hover the box and click ⚙ to change the address (hidden in the slide show).
-
-## Notes
-* Only `https://` pages. Sites that forbid embedding (X-Frame-Options / CSP) show blank.
-* The address is saved inside the .pptx; don't put secrets in it.
-* Logins are shared between boxes via the browser's cookies, subject to third-party-cookie rules.
+## About
+The add-in is a single static page ([index.html](index.html)) with no server and no tracking.
+It stores only the address you enter, inside your presentation file.
