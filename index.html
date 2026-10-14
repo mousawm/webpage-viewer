@@ -28,6 +28,7 @@
             padding: 6px 8px; font: 12px/1.4 Consolas, monospace; white-space: pre; color: #fff;
             background: #000c; border-radius: 4px; pointer-events: none; }
     #diag.on { display: block; }
+    #handsoffrow { color: #444; font-size: 12px; max-width: 520px; }
     #diaglink { background: none; border: 0; color: #666; font-size: 12px; text-decoration: underline;
                 cursor: pointer; }
   </style>
@@ -41,6 +42,8 @@
     <h3>Web Page Viewer</h3>
     <input id="url" type="url" placeholder="https://example.com" />
     <button id="save">Show page</button>
+    <label id="handsoffrow"><input id="handsoff" type="checkbox" /> Hands-off focus (experimental): never move
+      keyboard focus; dropdowns stay open, clicker must be handled by PowerPoint</label>
     <button id="diaglink">Show diagnostics (press D any time)</button>
     <div id="hint">Use an https address. Some sites (Google, Facebook, banks…) forbid being
       embedded and will appear blank. Your own pages, Power BI/Grafana embeds, YouTube
@@ -114,8 +117,17 @@
             + Math.round(innerWidth * dpr) + " x " + Math.round(innerHeight * dpr) + " device px",
           "Office:   " + [d.host, d.platform, d.version].filter(Boolean).join(" "),
           "View:     " + (inShow ? "slide show" : "edit"),
+          "Focus:    " + (document.activeElement === $("frame") ? "web page" : "add-in/slide")
+            + (document.hasFocus() ? "" : " (window unfocused)"),
+          "Mode:     " + (settings().get("handsOff") ? "hands-off" : "clicker-first"),
+          "Last key: " + lastKey,
         ].join("\n");
       };
+      let lastKey = "none";
+      document.addEventListener("keydown", e => {
+        lastKey = e.key + " @ " + new Date().toLocaleTimeString();
+        if ($("diag").classList.contains("on")) diag();
+      }, true);
       const toggleDiag = () => { diag(); $("diag").classList.toggle("on"); };
       $("diaglink").onclick = toggleDiag;
       window.addEventListener("resize", () => { if ($("diag").classList.contains("on")) diag(); });
@@ -163,6 +175,14 @@
       // The pin button holds focus on the page for typing or long menu use.
       const GRACE_MS = 4000;
       let pinned = false, graceTimer = 0, mouseOver = false;
+      const handsOff = () => !!settings().get("handsOff");
+      $("handsoff").checked = handsOff();
+      $("handsoff").onchange = () => {
+        settings().set("handsOff", $("handsoff").checked);
+        settings().saveAsync(() => {});
+        $("pin").style.display = $("handsoff").checked ? "none" : "";
+      };
+      if (handsOff()) $("pin").style.display = "none";
       const setPin = on => {
         pinned = on;
         $("pin").classList.toggle("on", on);
@@ -172,7 +192,7 @@
       };
       $("pin").onclick = () => setPin(!pinned);
       window.addEventListener("blur", () => {
-        if (!inShow || pinned) return;
+        if (!inShow || pinned || handsOff()) return;
         clearTimeout(graceTimer);
         graceTimer = setTimeout(() => {
           if (inShow && !pinned && document.activeElement === $("frame")) takeFocus();
@@ -181,7 +201,7 @@
       $("frame").addEventListener("mouseenter", () => { mouseOver = true; });
       $("frame").addEventListener("mouseleave", () => {
         mouseOver = false;
-        if (!inShow || pinned) return;
+        if (!inShow || pinned || handsOff()) return;
         clearTimeout(graceTimer);
         if (document.activeElement === $("frame")) takeFocus();
       });
