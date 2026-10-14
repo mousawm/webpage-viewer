@@ -18,6 +18,12 @@
     body:hover #gear { opacity: .85; }
     body.slideshow #gear { display: none !important; }
     body:focus { outline: none; }
+    #pin { display: none; position: absolute; top: 4px; right: 4px; z-index: 7; padding: 4px 10px;
+           font-size: 12px; cursor: pointer; opacity: 0; transition: opacity .2s;
+           background: #ffffffcc; border: 1px solid #aaa; border-radius: 4px; }
+    body.slideshow #pin { display: block; }
+    body:hover #pin, #pin.on { opacity: .85; }
+    #pin.on { background: #ffe9a8; }
     #diag { display: none; position: absolute; left: 4px; bottom: 4px; z-index: 6; margin: 0;
             padding: 6px 8px; font: 12px/1.4 Consolas, monospace; white-space: pre; color: #fff;
             background: #000c; border-radius: 4px; pointer-events: none; }
@@ -28,6 +34,7 @@
 </head>
 <body tabindex="-1">
   <button id="gear" title="Change web page">⚙</button>
+  <button id="pin" title="Keep keyboard focus on the web page (typing, long menus). Click again to use the clicker for slides.">Page keys: off</button>
   <iframe id="frame" allow="fullscreen; autoplay; clipboard-write" referrerpolicy="no-referrer"></iframe>
   <pre id="diag"></pre>
   <div id="setup">
@@ -78,7 +85,7 @@
       const applyView = v => {
         inShow = v === "read";
         document.body.classList.toggle("slideshow", inShow);
-        if (inShow) activatePage(); else if (pageActive) pageActive = false;
+        if (!inShow) setPin(false);
         if ($("diag").classList.contains("on")) diag();
       };
       try {
@@ -148,19 +155,35 @@
         window.focus();
         document.body.focus();
       }
-      // Slide show: make the embedded page active right away so it reacts to the mouse
-      // wheel, clicks and dropdowns without needing a first "activating" click.
-      let pageActive = false;
-      function activatePage() {
-        pageActive = true;
-        try { $("frame").focus(); $("frame").contentWindow.focus(); } catch (err) { /* cross-origin */ }
-      }
-      // Never pull focus away while the pointer is over the page (that closes dropdown
-      // menus and select lists). Once the pointer leaves the page, give focus back so
-      // the next clicker press changes the slide.
-      $("frame").addEventListener("mouseenter", () => { if (inShow) pageActive = true; });
+      // Focus policy during the slide show. The page is cross-origin, so we cannot see
+      // keys, clicks or open dropdowns inside it. Mouse wheel and clicks reach the page
+      // without it having focus, so by default the slide (clicker keys) keeps focus.
+      // A click moves focus into the page; we give it back after a grace period (long
+      // enough to open and pick from a dropdown) or as soon as the mouse leaves the page.
+      // The pin button holds focus on the page for typing or long menu use.
+      const GRACE_MS = 4000;
+      let pinned = false, graceTimer = 0, mouseOver = false;
+      const setPin = on => {
+        pinned = on;
+        $("pin").classList.toggle("on", on);
+        $("pin").textContent = on ? "Page keys: on" : "Page keys: off";
+        clearTimeout(graceTimer);
+        if (!on && inShow) takeFocus();
+      };
+      $("pin").onclick = () => setPin(!pinned);
+      window.addEventListener("blur", () => {
+        if (!inShow || pinned) return;
+        clearTimeout(graceTimer);
+        graceTimer = setTimeout(() => {
+          if (inShow && !pinned && document.activeElement === $("frame")) takeFocus();
+        }, GRACE_MS);
+      });
+      $("frame").addEventListener("mouseenter", () => { mouseOver = true; });
       $("frame").addEventListener("mouseleave", () => {
-        if (inShow && pageActive) { pageActive = false; takeFocus(); }
+        mouseOver = false;
+        if (!inShow || pinned) return;
+        clearTimeout(graceTimer);
+        if (document.activeElement === $("frame")) takeFocus();
       });
     });
   </script>

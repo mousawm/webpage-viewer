@@ -14,11 +14,13 @@ Show a live, clickable web page inside a slide. It keeps working during the slid
 4. Press **F5** to start the slide show. The page stays live and clickable.
 
 ## Presentation pointers and clickers
-When the slide show starts, the web page is activated automatically, so you can scroll, click links and open dropdown menus right away. While the mouse is over the page, the add-in does not take focus away, so dropdown menus stay open. When the mouse leaves the page, the add-in takes keyboard focus back, and the pointer's next/previous buttons (PageDown/PageUp, arrow keys) change slides again.
+During the slide show the clicker keeps control by default: the pointer's next/previous buttons (PageDown/PageUp, arrow keys) change slides from the first press. You can still scroll, click links and use dropdown menus in the page. After you click in the page, the add-in gives keyboard focus back to the slides after about 4 seconds, or immediately when the mouse leaves the page, so dropdowns have time to open and be used.
+
+For typing or long menus, hover the box and click **Page keys: off** (top right) to keep the keyboard on the page. Click it again (**Page keys: on**) to hand the keys back to the slides.
 
 Also handled: Space, Enter and N for next; Backspace and P for previous; Home and End for first and last slide.
 
-While the mouse is over the page during the slide show, the keyboard goes to the page (so typing works). Move the mouse off the page to use the clicker keys.
+Typing into a text box on the embedded page during the slide show needs **Page keys: on**.
 
 To change the address, hover over the box in edit view and click ⚙. The button is hidden during the slide show.
 
