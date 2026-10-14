@@ -17,9 +17,10 @@
             background: #ffffffcc; border: 1px solid #aaa; border-radius: 4px; z-index: 5; }
     body:hover #gear { opacity: .85; }
     body.slideshow #gear { display: none !important; }
+    body:focus { outline: none; }
   </style>
 </head>
-<body>
+<body tabindex="-1">
   <button id="gear" title="Change web page">⚙</button>
   <iframe id="frame" allow="fullscreen; autoplay; clipboard-write" referrerpolicy="no-referrer"></iframe>
   <div id="setup">
@@ -65,7 +66,12 @@
       $("gear").onclick = () => show(null);
 
       // "read" = slide show, "edit" = normal editing view.
-      const applyView = v => document.body.classList.toggle("slideshow", v === "read");
+      let inShow = false;
+      const applyView = v => {
+        inShow = v === "read";
+        document.body.classList.toggle("slideshow", inShow);
+        if (inShow) takeFocus();
+      };
       try {
         Office.context.document.getActiveViewAsync(r => {
           if (r.status === Office.AsyncResultStatus.Succeeded) applyView(r.value);
@@ -73,6 +79,44 @@
         Office.context.document.addHandlerAsync(Office.EventType.ActiveViewChanged,
           e => applyView(e.activeView));
       } catch (err) { /* older hosts: gear stays hover-only */ }
+
+      // Presentation pointers/clickers send ordinary keys (PageDown/PageUp, arrows).
+      // Once the embedded page has focus those keys go to the page instead of
+      // PowerPoint, so the slide stops advancing. Handle the keys here and move
+      // slides ourselves, and take focus back after the audience page is clicked.
+      const NEXT = ["PageDown", "ArrowRight", "ArrowDown", "Enter", " ", "n", "N"];
+      const PREV = ["PageUp", "ArrowLeft", "ArrowUp", "Backspace", "p", "P"];
+      const go = idx => Office.context.document.goToByIdAsync(idx, Office.GoToType.Index, () => {});
+      let lastNav = 0;
+      document.addEventListener("keydown", e => {
+        if (!inShow || e.ctrlKey || e.altKey || e.metaKey) return;
+        if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+        let idx;
+        if (NEXT.includes(e.key)) idx = Office.Index.Next;
+        else if (PREV.includes(e.key)) idx = Office.Index.Previous;
+        else if (e.key === "Home") idx = Office.Index.First;
+        else if (e.key === "End") idx = Office.Index.Last;
+        else return;
+        e.preventDefault();
+        const now = Date.now();
+        if (now - lastNav < 150) return; // clickers can double-fire or auto-repeat
+        lastNav = now;
+        go(idx);
+      });
+
+      function takeFocus() {
+        if (document.activeElement && document.activeElement !== document.body) {
+          document.activeElement.blur();
+        }
+        window.focus();
+        document.body.focus();
+      }
+      // Clicking inside the embedded page moves focus into it. Give the click time
+      // to land, then hand focus back so the next clicker press changes the slide.
+      window.addEventListener("blur", () => {
+        if (!inShow) return;
+        setTimeout(() => { if (document.activeElement === $("frame")) takeFocus(); }, 400);
+      });
     });
   </script>
 </body>
