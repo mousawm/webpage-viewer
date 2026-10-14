@@ -171,6 +171,13 @@
       // The pin button holds focus on the page for typing or long menu use.
       const GRACE_MS = 4000;
       let pinned = false, graceTimer = 0, mouseOver = false;
+      const setPin = on => {
+        pinned = on;
+        $("pin").classList.toggle("on", on);
+        $("pin").textContent = on ? "Page keys: on" : "Page keys: off";
+        clearTimeout(graceTimer);
+        if (!on && inShow) takeFocus();
+      };
       $("pin").onclick = () => setPin(!pinned);
       window.addEventListener("blur", () => {
         if (!inShow || pinned) return;
