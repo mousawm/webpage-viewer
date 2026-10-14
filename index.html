@@ -6,8 +6,13 @@
   <title>Web Page Viewer</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <style>
-    html, body { margin: 0; height: 100%; font-family: Segoe UI, sans-serif; background: #fff; }
-    #frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    html, body { margin: 0; height: 100%; overflow: hidden; font-family: Segoe UI, sans-serif; background: #fff; }
+    /* The page is laid out at --res times the box size, then scaled down to fit,
+       so the page behaves as if the browser window were larger and shows more. This does
+       not change sharpness: text gets smaller by the same factor. */
+    #frame { --res: 1; position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0;
+             width: calc(100% * var(--res)); height: calc(100% * var(--res));
+             transform: scale(calc(1 / var(--res))); }
     #setup { display: none; height: 100%; flex-direction: column; align-items: center;
              justify-content: center; gap: 10px; padding: 16px; box-sizing: border-box; }
     #setup input { width: min(520px, 90%); padding: 8px; font-size: 15px; }
@@ -33,6 +38,14 @@
   <div id="setup">
     <h3>Web Page Viewer</h3>
     <input id="url" type="url" placeholder="https://example.com" />
+    <label>Fit more on page
+      <select id="res">
+        <option value="1">Normal</option>
+        <option value="1.25">A little more (1.25×)</option>
+        <option value="1.5">More (1.5×)</option>
+        <option value="2">Lots more (2×)</option>
+      </select>
+    </label>
     <button id="save">Show page</button>
     <button id="diaglink">Show diagnostics (press D any time)</button>
     <div id="hint">Use an https address. Some sites (Google, Facebook, banks…) forbid being
@@ -49,7 +62,10 @@
       if (!/^https?:\/\//i.test(u)) u = "https://" + u;
       return u;
     }
+    const DEFAULT_RES = "1";
+    const applyRes = r => $("frame").style.setProperty("--res", r);
     function show(url) {
+      applyRes(settings().get("res") || DEFAULT_RES);
       if (url) {
         $("frame").style.display = "block";
         $("setup").style.display = "none";
@@ -60,6 +76,7 @@
         $("gear").style.display = "none";
         $("setup").style.display = "flex";
         $("url").value = settings().get("url") || "";
+        $("res").value = settings().get("res") || DEFAULT_RES;
       }
     }
     Office.onReady(() => {
@@ -68,6 +85,7 @@
         const url = normalize($("url").value);
         if (!url) return;
         settings().set("url", url);
+        settings().set("res", $("res").value);
         settings().saveAsync(() => show(url));
       };
       $("url").onkeydown = e => { if (e.key === "Enter") $("save").click(); };
