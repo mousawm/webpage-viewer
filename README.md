@@ -24,11 +24,8 @@ Typing into a text box on the embedded page during the slide show needs **Page k
 
 To change the address, hover over the box in edit view and click ⚙. The button is hidden during the slide show.
 
-## Hands-off focus (experimental)
-On the setup screen (⚙ in edit view), tick **Hands-off focus**. The add-in then never moves keyboard focus, so dropdowns stay open, and the clicker relies on PowerPoint handling its keys. If your clicker still changes slides in this mode, keep it on.
-
 ## Diagnostics
-If the page looks blurry, press **D** (in edit view or during the slide show) or click **Show diagnostics** on the setup screen. It shows which browser engine PowerPoint is using and the pixel density it gives the add-in, which side has keyboard focus, the focus mode and the last key the add-in received. Press **D** again to hide it.
+If the page looks blurry, press **D** (in edit view or during the slide show) or click **Show diagnostics** on the setup screen. It shows which browser engine PowerPoint is using and the pixel density it gives the add-in, which side has keyboard focus and the last key the add-in received. Press **D** again to hide it.
 
 ## Good to know
 - Only `https://` pages work. Some sites (Google, Microsoft sign-in, banks) don't allow embedding and appear blank.
