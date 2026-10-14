@@ -18,15 +18,23 @@
     body:hover #gear { opacity: .85; }
     body.slideshow #gear { display: none !important; }
     body:focus { outline: none; }
+    #diag { display: none; position: absolute; left: 4px; bottom: 4px; z-index: 6; margin: 0;
+            padding: 6px 8px; font: 12px/1.4 Consolas, monospace; white-space: pre; color: #fff;
+            background: #000c; border-radius: 4px; pointer-events: none; }
+    #diag.on { display: block; }
+    #diaglink { background: none; border: 0; color: #666; font-size: 12px; text-decoration: underline;
+                cursor: pointer; }
   </style>
 </head>
 <body tabindex="-1">
   <button id="gear" title="Change web page">⚙</button>
   <iframe id="frame" allow="fullscreen; autoplay; clipboard-write" referrerpolicy="no-referrer"></iframe>
+  <pre id="diag"></pre>
   <div id="setup">
     <h3>Web Page Viewer</h3>
     <input id="url" type="url" placeholder="https://example.com" />
     <button id="save">Show page</button>
+    <button id="diaglink">Show diagnostics (press D any time)</button>
     <div id="hint">Use an https address. Some sites (Google, Facebook, banks…) forbid being
       embedded and will appear blank. Your own pages, Power BI/Grafana embeds, YouTube
       <code>/embed/</code> links, Wikipedia, etc. work.</div>
@@ -71,6 +79,7 @@
         inShow = v === "read";
         document.body.classList.toggle("slideshow", inShow);
         if (inShow) takeFocus();
+        if ($("diag").classList.contains("on")) diag();
       };
       try {
         Office.context.document.getActiveViewAsync(r => {
@@ -79,6 +88,34 @@
         Office.context.document.addHandlerAsync(Office.EventType.ActiveViewChanged,
           e => applyView(e.activeView));
       } catch (err) { /* older hosts: gear stays hover-only */ }
+
+      // Diagnostics: which browser engine and pixel density PowerPoint gives the add-in.
+      const engine = () => {
+        const ua = navigator.userAgent;
+        if (/Edg\//.test(ua)) return "Edge WebView2 (Chromium)";
+        if (/Edge\//.test(ua)) return "Legacy Edge (EdgeHTML)";
+        if (/Trident|MSIE/.test(ua)) return "Internet Explorer (Trident)";
+        return ua;
+      };
+      const diag = () => {
+        const d = Office.context.diagnostics || {};
+        const dpr = window.devicePixelRatio;
+        $("diag").textContent = [
+          "Engine:   " + engine(),
+          "Pixel density (devicePixelRatio): " + dpr,
+          "Box: " + innerWidth + " x " + innerHeight + " CSS px = "
+            + Math.round(innerWidth * dpr) + " x " + Math.round(innerHeight * dpr) + " device px",
+          "Office:   " + [d.host, d.platform, d.version].filter(Boolean).join(" "),
+          "View:     " + (inShow ? "slide show" : "edit"),
+        ].join("\n");
+      };
+      const toggleDiag = () => { diag(); $("diag").classList.toggle("on"); };
+      $("diaglink").onclick = toggleDiag;
+      window.addEventListener("resize", () => { if ($("diag").classList.contains("on")) diag(); });
+      document.addEventListener("keydown", e => {
+        if ((e.key === "d" || e.key === "D") && !e.ctrlKey && !e.altKey && !e.metaKey
+            && !(e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))) toggleDiag();
+      });
 
       // Presentation pointers/clickers send ordinary keys (PageDown/PageUp, arrows).
       // Once the embedded page has focus those keys go to the page instead of

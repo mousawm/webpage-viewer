@@ -22,6 +22,9 @@ Typing into a text box on the embedded page doesn't work during the slide show, 
 
 To change the address, hover over the box in edit view and click ⚙. The button is hidden during the slide show.
 
+## Diagnostics
+If the page looks blurry, press **D** (in edit view or during the slide show) or click **Show diagnostics** on the setup screen. It shows which browser engine PowerPoint is using and the pixel density it gives the add-in. Press **D** again to hide it.
+
 ## Good to know
 - Only `https://` pages work. Some sites (Google, Microsoft sign-in, banks) don't allow embedding and appear blank.
 - The address is saved inside your .pptx, so don't put passwords or tokens in it.
