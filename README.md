@@ -10,9 +10,8 @@ Show a live, clickable web page inside a slide. It keeps working during the slid
 ## Use it
 1. In PowerPoint, go to **Insert → My Add-ins → Web Page Viewer**.
 2. Type an `https://` address and click **Show page**.
-3. Optionally pick a **Page resolution**. The page is laid out at 1.5× the box size by default and scaled down, so more of it fits and it looks like a larger window. Choose 1× for bigger text or 2×/3× to fit even more.
-4. Resize or move the box like any other object on the slide.
-5. Press **F5** to start the slide show. The page stays live and clickable.
+3. Resize or move the box like any other object on the slide.
+4. Press **F5** to start the slide show. The page stays live and clickable.
 
 ## Presentation pointers and clickers
 During the slide show, the pointer's next/previous buttons (PageDown/PageUp, arrow keys) keep changing slides even after you click inside the web page. After a click, the add-in takes keyboard focus back after about half a second. Click the page as usual; scrolling with the mouse wheel and links still work.
