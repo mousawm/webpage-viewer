@@ -16,11 +16,11 @@ Show a live, clickable web page inside a slide. It keeps working during the slid
 ## Presentation pointers and clickers
 During the slide show the clicker keeps control by default: the pointer's next/previous buttons (PageDown/PageUp, arrow keys) change slides from the first press. You can still scroll, click links and use dropdown menus in the page. After you click in the page, the add-in gives keyboard focus back to the slides after about 4 seconds, or immediately when the mouse leaves the page, so dropdowns have time to open and be used.
 
-For typing or long menus, hover the box and click **Page keys: off** (top right) to keep the keyboard on the page. Click it again (**Page keys: on**) to hand the keys back to the slides.
+For typing in the page during the slide show, open the setup screen (hover the box in edit view and click ⚙) and tick **Keep keyboard on the page during the slide show**. While it is ticked, the clicker's next/previous buttons won't change slides. Untick it to get them back. Nothing extra is shown during the slide show.
 
 Also handled: Space, Enter and N for next; Backspace and P for previous; Home and End for first and last slide.
 
-Typing into a text box on the embedded page during the slide show needs **Page keys: on**.
+Typing into a text box on the embedded page during the slide show needs that option ticked.
 
 To change the address, hover over the box in edit view and click ⚙. The button is hidden during the slide show.
 

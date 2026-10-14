@@ -18,12 +18,7 @@
     body:hover #gear { opacity: .85; }
     body.slideshow #gear { display: none !important; }
     body:focus { outline: none; }
-    #pin { display: none; position: absolute; top: 4px; right: 4px; z-index: 7; padding: 4px 10px;
-           font-size: 12px; cursor: pointer; opacity: 0; transition: opacity .2s;
-           background: #ffffffcc; border: 1px solid #aaa; border-radius: 4px; }
-    body.slideshow #pin { display: block; }
-    body:hover #pin, #pin.on { opacity: .85; }
-    #pin.on { background: #ffe9a8; }
+    #keysrow { color: #444; font-size: 12px; max-width: 520px; }
     #diag { display: none; position: absolute; left: 4px; bottom: 4px; z-index: 6; margin: 0;
             padding: 6px 8px; font: 12px/1.4 Consolas, monospace; white-space: pre; color: #fff;
             background: #000c; border-radius: 4px; pointer-events: none; }
@@ -34,13 +29,14 @@
 </head>
 <body tabindex="-1">
   <button id="gear" title="Change web page">⚙</button>
-  <button id="pin" title="Keep keyboard focus on the web page (typing, long menus). Click again to use the clicker for slides.">Page keys: off</button>
   <iframe id="frame" allow="fullscreen; autoplay; clipboard-write" referrerpolicy="no-referrer"></iframe>
   <pre id="diag"></pre>
   <div id="setup">
     <h3>Web Page Viewer</h3>
     <input id="url" type="url" placeholder="https://example.com" />
     <button id="save">Show page</button>
+    <label id="keysrow"><input id="pagekeys" type="checkbox" /> Keep keyboard on the page during the slide
+      show (for typing in text boxes). The clicker's next/previous buttons will not change slides while this is on.</label>
     <button id="diaglink">Show diagnostics (press D any time)</button>
     <div id="hint">Use an https address. Some sites (Google, Facebook, banks…) forbid being
       embedded and will appear blank. Your own pages, Power BI/Grafana embeds, YouTube
@@ -85,7 +81,6 @@
       const applyView = v => {
         inShow = v === "read";
         document.body.classList.toggle("slideshow", inShow);
-        if (!inShow) setPin(false);
         if ($("diag").classList.contains("on")) diag();
       };
       try {
@@ -168,28 +163,26 @@
       // without it having focus, so by default the slide (clicker keys) keeps focus.
       // A click moves focus into the page; we give it back after a grace period (long
       // enough to open and pick from a dropdown) or as soon as the mouse leaves the page.
-      // The pin button holds focus on the page for typing or long menu use.
+      // The "Keep keyboard on the page" option (set under the gear) turns this off for typing.
       const GRACE_MS = 4000;
-      let pinned = false, graceTimer = 0, mouseOver = false;
-      const setPin = on => {
-        pinned = on;
-        $("pin").classList.toggle("on", on);
-        $("pin").textContent = on ? "Page keys: on" : "Page keys: off";
-        clearTimeout(graceTimer);
-        if (!on && inShow) takeFocus();
+      let graceTimer = 0, mouseOver = false;
+      const keepOnPage = () => !!settings().get("pageKeys");
+      $("pagekeys").checked = keepOnPage();
+      $("pagekeys").onchange = () => {
+        settings().set("pageKeys", $("pagekeys").checked);
+        settings().saveAsync(() => {});
       };
-      $("pin").onclick = () => setPin(!pinned);
       window.addEventListener("blur", () => {
-        if (!inShow || pinned) return;
+        if (!inShow || keepOnPage()) return;
         clearTimeout(graceTimer);
         graceTimer = setTimeout(() => {
-          if (inShow && !pinned && document.activeElement === $("frame")) takeFocus();
+          if (inShow && !keepOnPage() && document.activeElement === $("frame")) takeFocus();
         }, GRACE_MS);
       });
       $("frame").addEventListener("mouseenter", () => { mouseOver = true; });
       $("frame").addEventListener("mouseleave", () => {
         mouseOver = false;
-        if (!inShow || pinned) return;
+        if (!inShow || keepOnPage()) return;
         clearTimeout(graceTimer);
         if (document.activeElement === $("frame")) takeFocus();
       });
