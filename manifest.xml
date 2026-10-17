@@ -10,7 +10,7 @@
   <Description DefaultValue="Show a live web page inside a slide and use it during the slide show."/>
   <IconUrl DefaultValue="https://mousawm.github.io/webpage-viewer/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://mousawm.github.io/webpage-viewer/assets/icon-64.png"/>
-  <SupportUrl DefaultValue="https://mousawm.github.io/webpage-viewer/"/>
+  <SupportUrl DefaultValue="https://mousawm.github.io/webpage-viewer/support.html"/>
   <Hosts>
     <Host Name="Presentation"/>
   </Hosts>
