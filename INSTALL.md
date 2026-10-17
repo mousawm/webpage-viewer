@@ -3,6 +3,19 @@
 Download the manifest: https://mousawm.github.io/webpage-viewer/manifest.xml
 (right-click → Save link as… → keep the name `manifest.xml`).
 
+## Windows: one-click install (recommended)
+1. Download [install-windows.cmd](https://mousawm.github.io/webpage-viewer/install-windows.cmd) and double-click it.
+   No admin rights needed.
+2. Restart PowerPoint.
+3. Insert → My Add-ins → Developer Add-ins → Web Page Viewer.
+
+Do this once on each device. It registers the add-in for your Windows account, so a
+presentation made on one device opens on another without a shared folder.
+To remove it, run [uninstall-windows.cmd](https://mousawm.github.io/webpage-viewer/uninstall-windows.cmd).
+
+Slides inserted from a shared folder keep pointing to that folder. Delete those boxes
+and insert the add-in again once after installing this way.
+
 ## A. Microsoft 365 admin (everyone gets it)
 Admin center → Settings → Integrated apps → Upload custom apps → Office Add-in → upload manifest.xml → assign users.
 Users find it under Insert → My Add-ins → Admin Managed (can take up to 24 h).
