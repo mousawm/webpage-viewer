@@ -4,7 +4,7 @@
            xsi:type="ContentApp">
   <Id>7c1f0b2e-5d3a-4a8e-9b61-2f4d8e6a9c10</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Web Page Viewer</ProviderName>
+  <ProviderName>Mousa Salih</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Web Page Viewer"/>
   <Description DefaultValue="Show a live web page inside a slide and use it during the slide show."/>

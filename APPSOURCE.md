@@ -14,9 +14,9 @@ and the validation policies at
 - [ ] **Partner Center account.** Enrol in the Commercial Marketplace program at
       <https://partner.microsoft.com/dashboard/account/v3/enrollment/introduction/marketplace>.
       Free for individuals and companies; identity verification can take days.
-- [ ] **Publisher name.** `ProviderName` in `manifest.xml` is currently "Web Page Viewer".
-      It should match the publisher display name on your Partner Center account. Change it
-      before submitting.
+- [ ] **Publisher name.** `ProviderName` in `manifest.xml` is "Mousa Salih".
+      It must match the publisher display name on your Partner Center account exactly. Change it
+      if the account uses a different name.
 - [ ] **Keep the site online.** The add-in runs from <https://mousawm.github.io/webpage-viewer/>.
       Microsoft reviews the manifest, but users always load the live page, so the URLs in the
       manifest (`SourceLocation`, icons, `SupportUrl`) must keep working. Don't rename or
