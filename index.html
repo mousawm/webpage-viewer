@@ -7,21 +7,22 @@
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <style>
     html, body { margin: 0; height: 100%; font-family: Segoe UI, sans-serif; background: #fff; }
-    #frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    #frame { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
     #setup { display: none; height: 100%; flex-direction: column; align-items: center;
-             justify-content: center; gap: 10px; padding: 16px; box-sizing: border-box; }
-    #setup input { width: min(520px, 90%); padding: 8px; font-size: 15px; }
+             justify-content: center; padding: 16px; box-sizing: border-box; }
+    #setup input { width: 90%; max-width: 520px; padding: 8px; font-size: 15px; }
+    #setup > * { margin: 5px 0; }
     #setup button, #gear { padding: 8px 16px; font-size: 14px; cursor: pointer; }
     #hint { color: #666; font-size: 12px; max-width: 520px; text-align: center; }
     #gear { position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity .2s;
-            background: #ffffffcc; border: 1px solid #aaa; border-radius: 4px; z-index: 5; }
+            background: rgba(255,255,255,.8); border: 1px solid #aaa; border-radius: 4px; z-index: 5; }
     body:hover #gear { opacity: .85; }
     body.slideshow #gear { display: none !important; }
     body:focus { outline: none; }
     #keysrow { color: #444; font-size: 12px; max-width: 520px; }
     #diag { display: none; position: absolute; left: 4px; bottom: 4px; z-index: 6; margin: 0;
             padding: 6px 8px; font: 12px/1.4 Consolas, monospace; white-space: pre; color: #fff;
-            background: #000c; border-radius: 4px; pointer-events: none; }
+            background: rgba(0,0,0,.8); border-radius: 4px; pointer-events: none; }
     #diag.on { display: block; }
     #diaglink { background: none; border: 0; color: #666; font-size: 12px; text-decoration: underline;
                 cursor: pointer; }
@@ -46,11 +47,17 @@
       <a href="terms.html" target="_blank">Terms</a></div>
   </div>
   <script>
-    const $ = id => document.getElementById(id);
-    const settings = () => Office.context.document.settings;
+    // Plain ES5 on purpose: older Office (2013/2016/2019) runs add-ins in Internet
+    // Explorer 11, which cannot parse arrow functions, let/const or Array.includes.
+    function $(id) { return document.getElementById(id); }
+    function settings() { return Office.context.document.settings; }
+    function setClass(el, name, on) {
+      if (on) el.classList.add(name); else el.classList.remove(name);
+    }
+    function isField(t) { return !!(t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)); }
 
     function normalize(u) {
-      u = u.trim();
+      u = u.replace(/^\s+|\s+$/g, "");
       if (!u) return "";
       if (!/^https?:\/\//i.test(u)) u = "https://" + u;
       return u;
@@ -68,43 +75,44 @@
         $("url").value = settings().get("url") || "";
       }
     }
-    Office.onReady(() => {
+    Office.onReady(function () {
       show(settings().get("url"));
-      $("save").onclick = () => {
-        const url = normalize($("url").value);
+      $("save").onclick = function () {
+        var url = normalize($("url").value);
         if (!url) return;
         settings().set("url", url);
-        settings().saveAsync(() => show(url));
+        settings().saveAsync(function () { show(url); });
       };
-      $("url").onkeydown = e => { if (e.key === "Enter") $("save").click(); };
-      $("gear").onclick = () => show(null);
+      $("url").onkeydown = function (e) { if (e.key === "Enter") $("save").click(); };
+      $("gear").onclick = function () { show(null); };
 
       // "read" = slide show, "edit" = normal editing view.
-      let inShow = false;
-      const applyView = v => {
+      var inShow = false;
+      function applyView(v) {
         inShow = v === "read";
-        document.body.classList.toggle("slideshow", inShow);
+        setClass(document.body, "slideshow", inShow);
         if ($("diag").classList.contains("on")) diag();
-      };
+      }
       try {
-        Office.context.document.getActiveViewAsync(r => {
+        Office.context.document.getActiveViewAsync(function (r) {
           if (r.status === Office.AsyncResultStatus.Succeeded) applyView(r.value);
         });
         Office.context.document.addHandlerAsync(Office.EventType.ActiveViewChanged,
-          e => applyView(e.activeView));
+          function (e) { applyView(e.activeView); });
       } catch (err) { /* older hosts: gear stays hover-only */ }
 
       // Diagnostics: which browser engine and pixel density PowerPoint gives the add-in.
-      const engine = () => {
-        const ua = navigator.userAgent;
+      function engine() {
+        var ua = navigator.userAgent;
         if (/Edg\//.test(ua)) return "Edge WebView2 (Chromium)";
         if (/Edge\//.test(ua)) return "Legacy Edge (EdgeHTML)";
         if (/Trident|MSIE/.test(ua)) return "Internet Explorer (Trident)";
         return ua;
-      };
-      const diag = () => {
-        const d = Office.context.diagnostics || {};
-        const dpr = window.devicePixelRatio;
+      }
+      var lastKey = "none";
+      function diag() {
+        var d = Office.context.diagnostics || {};
+        var dpr = window.devicePixelRatio || 1;
         $("diag").textContent = [
           "Engine:   " + engine(),
           "Pixel density (devicePixelRatio): " + dpr,
@@ -114,41 +122,44 @@
           "View:     " + (inShow ? "slide show" : "edit"),
           "Focus:    " + (document.activeElement === $("frame") ? "web page" : "add-in/slide")
             + (document.hasFocus() ? "" : " (window unfocused)"),
-          "Last key: " + lastKey,
+          "Last key: " + lastKey
         ].join("\n");
-      };
-      let lastKey = "none";
-      document.addEventListener("keydown", e => {
+      }
+      document.addEventListener("keydown", function (e) {
         lastKey = e.key + " @ " + new Date().toLocaleTimeString();
         if ($("diag").classList.contains("on")) diag();
       }, true);
-      const toggleDiag = () => { diag(); $("diag").classList.toggle("on"); };
+      function toggleDiag() {
+        diag();
+        setClass($("diag"), "on", !$("diag").classList.contains("on"));
+      }
       $("diaglink").onclick = toggleDiag;
-      window.addEventListener("resize", () => { if ($("diag").classList.contains("on")) diag(); });
-      document.addEventListener("keydown", e => {
+      window.addEventListener("resize", function () { if ($("diag").classList.contains("on")) diag(); });
+      document.addEventListener("keydown", function (e) {
         if ((e.key === "d" || e.key === "D") && !e.ctrlKey && !e.altKey && !e.metaKey
-            && !(e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))) toggleDiag();
+            && !isField(e.target)) toggleDiag();
       });
 
       // Presentation pointers/clickers send ordinary keys (PageDown/PageUp, arrows).
       // Once the embedded page has focus those keys go to the page instead of
       // PowerPoint, so the slide stops advancing. Handle the keys here and move
       // slides ourselves, and take focus back after the audience page is clicked.
-      const NEXT = ["PageDown", "ArrowRight", "ArrowDown", "Enter", " ", "n", "N"];
-      const PREV = ["PageUp", "ArrowLeft", "ArrowUp", "Backspace", "p", "P"];
-      const go = idx => Office.context.document.goToByIdAsync(idx, Office.GoToType.Index, () => {});
-      let lastNav = 0;
-      document.addEventListener("keydown", e => {
+      // IE11 names some keys differently ("Right", "Spacebar"), so both are listed.
+      var NEXT = ["PageDown", "ArrowRight", "Right", "ArrowDown", "Down", "Enter", " ", "Spacebar", "n", "N"];
+      var PREV = ["PageUp", "ArrowLeft", "Left", "ArrowUp", "Up", "Backspace", "p", "P"];
+      function go(idx) { Office.context.document.goToByIdAsync(idx, Office.GoToType.Index, function () {}); }
+      var lastNav = 0;
+      document.addEventListener("keydown", function (e) {
         if (!inShow || e.ctrlKey || e.altKey || e.metaKey) return;
-        if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
-        let idx;
-        if (NEXT.includes(e.key)) idx = Office.Index.Next;
-        else if (PREV.includes(e.key)) idx = Office.Index.Previous;
+        if (isField(e.target)) return;
+        var idx;
+        if (NEXT.indexOf(e.key) >= 0) idx = Office.Index.Next;
+        else if (PREV.indexOf(e.key) >= 0) idx = Office.Index.Previous;
         else if (e.key === "Home") idx = Office.Index.First;
         else if (e.key === "End") idx = Office.Index.Last;
         else return;
         e.preventDefault();
-        const now = Date.now();
+        var now = Date.now();
         if (now - lastNav < 150) return; // clickers can double-fire or auto-repeat
         lastNav = now;
         go(idx);
@@ -167,24 +178,22 @@
       // A click moves focus into the page; we give it back after a grace period (long
       // enough to open and pick from a dropdown) or as soon as the mouse leaves the page.
       // The "Keep keyboard on the page" option (set under the gear) turns this off for typing.
-      const GRACE_MS = 4000;
-      let graceTimer = 0, mouseOver = false;
-      const keepOnPage = () => !!settings().get("pageKeys");
+      var GRACE_MS = 4000;
+      var graceTimer = 0;
+      function keepOnPage() { return !!settings().get("pageKeys"); }
       $("pagekeys").checked = keepOnPage();
-      $("pagekeys").onchange = () => {
+      $("pagekeys").onchange = function () {
         settings().set("pageKeys", $("pagekeys").checked);
-        settings().saveAsync(() => {});
+        settings().saveAsync(function () {});
       };
-      window.addEventListener("blur", () => {
+      window.addEventListener("blur", function () {
         if (!inShow || keepOnPage()) return;
         clearTimeout(graceTimer);
-        graceTimer = setTimeout(() => {
+        graceTimer = setTimeout(function () {
           if (inShow && !keepOnPage() && document.activeElement === $("frame")) takeFocus();
         }, GRACE_MS);
       });
-      $("frame").addEventListener("mouseenter", () => { mouseOver = true; });
-      $("frame").addEventListener("mouseleave", () => {
-        mouseOver = false;
+      $("frame").addEventListener("mouseleave", function () {
         if (!inShow || keepOnPage()) return;
         clearTimeout(graceTimer);
         if (document.activeElement === $("frame")) takeFocus();

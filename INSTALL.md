@@ -13,6 +13,18 @@ Do this once on each device. It registers the add-in for your Windows account, s
 presentation made on one device opens on another without a shared folder.
 To remove it, run [uninstall-windows.cmd](https://mousawm.github.io/webpage-viewer/uninstall-windows.cmd).
 
+If Windows blocks the file, open **Command Prompt** and paste this instead (one line):
+
+```
+mkdir "%LOCALAPPDATA%\WebPageViewer" & curl -fsSL -o "%LOCALAPPDATA%\WebPageViewer\manifest.xml" https://mousawm.github.io/webpage-viewer/manifest.xml && reg add "HKCU\Software\Microsoft\Office\16.0\WEF\Developer" /v 7c1f0b2e-5d3a-4a8e-9b61-2f4d8e6a9c10 /t REG_SZ /d "%LOCALAPPDATA%\WebPageViewer\manifest.xml" /f
+```
+
+For Office 2013, run it again with `16.0` changed to `15.0`.
+
+Works with PowerPoint 2013, 2016, 2019, 2021 and Microsoft 365. Older Office versions show
+add-ins using Internet Explorer 11, so modern websites may not display correctly inside
+the box there even though the add-in itself runs.
+
 Slides inserted from a shared folder keep pointing to that folder. Delete those boxes
 and insert the add-in again once after installing this way.
 
