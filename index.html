@@ -19,7 +19,7 @@
     body:hover #gear { opacity: .85; }
     body.slideshow #gear { display: none !important; }
     body:focus { outline: none; }
-    #keysrow, #autorow { color: #444; font-size: 12px; max-width: 520px; }
+    #keysrow { color: #444; font-size: 12px; max-width: 520px; }
     #diag { display: none; position: absolute; left: 4px; bottom: 4px; z-index: 6; margin: 0;
             padding: 6px 8px; font: 12px/1.4 Consolas, monospace; white-space: pre; color: #fff;
             background: rgba(0,0,0,.8); border-radius: 4px; pointer-events: none; }
@@ -38,8 +38,6 @@
     <button id="save">Show page</button>
     <label id="keysrow"><input id="pagekeys" type="checkbox" /> Keep keyboard on the page during the slide
       show (for typing in text boxes). The clicker's next/previous buttons will not change slides while this is on.</label>
-    <label id="autorow"><input id="autoact" type="checkbox" /> Activate the page when the slide show
-      starts, so the first click works in the page. The clicker keeps changing slides.</label>
     <button id="diaglink">Show diagnostics (press D any time)</button>
     <div id="hint">Use an https address. Some sites (Google, Facebook, banks…) forbid being
       embedded and will appear blank. Your own pages, Power BI/Grafana embeds, YouTube
@@ -93,7 +91,6 @@
       function applyView(v) {
         inShow = v === "read";
         setClass(document.body, "slideshow", inShow);
-        if (inShow) activateSoon();
         if ($("diag").classList.contains("on")) diag();
       }
       try {
@@ -123,7 +120,6 @@
             + Math.round(innerWidth * dpr) + " x " + Math.round(innerHeight * dpr) + " device px",
           "Office:   " + [d.host, d.platform, d.version].filter(Boolean).join(" "),
           "View:     " + (inShow ? "slide show" : "edit"),
-          "Activate: " + (autoActivate() ? "at slide show start" : "off"),
           "Focus:    " + (document.activeElement === $("frame") ? "web page" : "add-in/slide")
             + (document.hasFocus() ? "" : " (window unfocused)"),
           "Last key: " + lastKey
@@ -196,30 +192,6 @@
         graceTimer = setTimeout(function () {
           if (inShow && !keepOnPage() && document.activeElement === $("frame")) takeFocus();
         }, GRACE_MS);
-      });
-      // Slide show start: make the add-in active straight away, so the first click lands
-      // in the page instead of only activating the box. Focus goes to the add-in itself,
-      // not into the page, so clicker keys reach the handler above and still change slides.
-      // Retried briefly because the slide show window may take focus after we are told.
-      function autoActivate() { return !settings().get("noAutoActivate"); }
-      function activate() {
-        if (!inShow || !autoActivate() || document.hidden) return;
-        if (document.activeElement === $("frame")) return; // already in the page
-        if (keepOnPage()) { try { $("frame").focus(); } catch (err) { /* cross-origin */ } }
-        else takeFocus();
-      }
-      function activateSoon() {
-        activate();
-        setTimeout(activate, 300);
-        setTimeout(activate, 1000);
-      }
-      $("autoact").checked = autoActivate();
-      $("autoact").onchange = function () {
-        settings().set("noAutoActivate", !$("autoact").checked);
-        settings().saveAsync(function () {});
-      };
-      document.addEventListener("visibilitychange", function () {
-        if (!document.hidden) activateSoon();
       });
       $("frame").addEventListener("mouseleave", function () {
         if (!inShow || keepOnPage()) return;
